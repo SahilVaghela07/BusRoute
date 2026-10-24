@@ -9,18 +9,15 @@ def home_view(request):
 
 # 2. Search Buses (GET Request)
 def buses_view(request):
-    # Read query parameters from URL: ?from=Ahmedabad&to=Rajkot&date=2026-10-25
     from_city = request.GET.get('from', '').strip()
     to_city = request.GET.get('to', '').strip()
     travel_date = request.GET.get('date', '')
 
-    # Filter database
     if from_city and to_city:
         bus_list = Bus.objects.filter(from_city__iexact=from_city, to_city__iexact=to_city)
     else:
         bus_list = Bus.objects.all()
 
-    # Convert database models to dicts for JSON passing to frontend
     buses_data = []
     for b in bus_list:
         dept = b.departure_time.strftime('%H:%M') if hasattr(b.departure_time, 'strftime') else str(b.departure_time)[:5]
@@ -62,20 +59,19 @@ def booking_view(request, bus_id=None):
         else:
             bus = Bus.objects.first()
 
+    travel_date = request.GET.get('date', '2026-11-10')
+
     if request.method == 'POST':
-        # Read form values from HTTP POST request body
         name = request.POST.get('passenger_name')
         email = request.POST.get('passenger_email')
         phone = request.POST.get('passenger_phone')
         seats = request.POST.get('selected_seats', '1')
-        date = request.POST.get('travel_date')
+        date = request.POST.get('travel_date') or travel_date
 
-        # Calculate fare
         seat_count = len(seats.split(',')) if ',' in seats else 1
         total_price = seat_count * (bus.fare if bus else 100)
         ref_no = f"BR{random.randint(100000, 999999)}"
 
-        # Save to database
         booking = Booking.objects.create(
             user=request.user if request.user.is_authenticated else None,
             bus=bus,
@@ -83,12 +79,21 @@ def booking_view(request, bus_id=None):
             passenger_name=name,
             passenger_email=email,
             passenger_phone=phone,
-            travel_date=date or "2026-11-10",
+            travel_date=date,
             selected_seats=seats,
             total_fare=total_price,
         )
 
         return redirect('confirmation', booking_id=booking.id)
+
+    # If GET, query database for seats already booked for this bus and date
+    booked_records = Booking.objects.filter(bus=bus, travel_date=travel_date)
+    booked_seats = []
+    for br in booked_records:
+        for s in str(br.selected_seats).split(','):
+            s = s.strip()
+            if s.isdigit():
+                booked_seats.append(int(s))
 
     # Format selected bus for frontend JSON
     bus_data = {}
@@ -107,12 +112,16 @@ def booking_view(request, bus_id=None):
             'duration': bus.duration,
             'fare': bus.fare,
             'totalSeats': bus.total_seats,
-            'availableSeats': max(1, bus.total_seats - 12),
+            'availableSeats': max(1, bus.total_seats - len(booked_seats) - 10),
             'rating': 4.5,
+            'bookedSeats': booked_seats,
         }
 
-    # If GET, display the seat selection page
-    return render(request, 'booking.html', {'bus': bus, 'bus_json': json.dumps(bus_data)})
+    return render(request, 'booking.html', {
+        'bus': bus,
+        'bus_json': json.dumps(bus_data),
+        'travel_date': travel_date,
+    })
 
 # 4. Confirmation Page
 def confirmation_view(request, booking_id=None):

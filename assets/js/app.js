@@ -359,7 +359,7 @@ function initBookingPage() {
   selectedSeats = [];
 
   renderBusSummary(bus, date, passengers);
-  renderSeatMap(bus, passengers);
+  renderSeatMap(bus, passengers, date);
   initBookingForm(bus, date, passengers);
 }
 
@@ -398,13 +398,91 @@ function renderBusSummary(bus, date, passengers) {
   if (farePerSeatEl) farePerSeatEl.textContent = "₹" + bus.fare;
 }
 
+
+// Find all already booked seats for a bus on a specific date (from localStorage)
+function getBookedSeatsForBus(busId, travelDate) {
+  var booked = [];
+
+  // Check all user accounts in localStorage
+  if (typeof getUsers === "function") {
+    var users = getUsers();
+    users.forEach(function (u) {
+      if (u.bookings && Array.isArray(u.bookings)) {
+        u.bookings.forEach(function (b) {
+          var matchBus = (b.busId === busId) || (b.operator && b.operator.toLowerCase() === (busId || "").toLowerCase());
+          var matchDate = (b.date === travelDate) || (b.travelDate === travelDate);
+          if (matchBus && matchDate) {
+            if (Array.isArray(b.selectedSeats)) {
+              b.selectedSeats.forEach(function (s) {
+                var sn = parseInt(s);
+                if (!isNaN(sn) && booked.indexOf(sn) === -1) booked.push(sn);
+              });
+            } else if (typeof b.selectedSeats === "string") {
+              b.selectedSeats.split(",").forEach(function (s) {
+                var sn = parseInt(s.trim());
+                if (!isNaN(sn) && booked.indexOf(sn) === -1) booked.push(sn);
+              });
+            }
+          }
+        });
+      }
+    });
+  }
+
+  // Check global confirmed bookings list
+  try {
+    var all = JSON.parse(localStorage.getItem("busroute_all_bookings") || "[]");
+    all.forEach(function (b) {
+      var matchBus = (b.busId === busId) || (b.operator && b.operator.toLowerCase() === (busId || "").toLowerCase());
+      var matchDate = (b.date === travelDate) || (b.travelDate === travelDate);
+      if (matchBus && matchDate) {
+        if (Array.isArray(b.selectedSeats)) {
+          b.selectedSeats.forEach(function (s) {
+            var sn = parseInt(s);
+            if (!isNaN(sn) && booked.indexOf(sn) === -1) booked.push(sn);
+          });
+        } else if (typeof b.selectedSeats === "string") {
+          b.selectedSeats.split(",").forEach(function (s) {
+            var sn = parseInt(s.trim());
+            if (!isNaN(sn) && booked.indexOf(sn) === -1) booked.push(sn);
+          });
+        }
+      }
+    });
+  } catch (e) {}
+
+  return booked;
+}
+
 // Interactive Seat Selection Map
-function renderSeatMap(bus, maxPassengers) {
+function renderSeatMap(bus, maxPassengers, date) {
   var mapEl = document.getElementById("seat-map");
   if (!mapEl) return;
 
   var total = bus.totalSeats || 40;
-  var unavailable = bus.unavailableSeats || [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 38];
+  var defaultUnavailable = [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 38];
+  var unavailable = (bus.unavailableSeats && bus.unavailableSeats.slice()) || defaultUnavailable.slice();
+
+  // 1. Add Django database booked seats (if present)
+  if (bus.bookedSeats && Array.isArray(bus.bookedSeats)) {
+    bus.bookedSeats.forEach(function (s) {
+      var sn = parseInt(s);
+      if (!isNaN(sn) && unavailable.indexOf(sn) === -1) {
+        unavailable.push(sn);
+      }
+    });
+  }
+
+  // 2. Add local storage booked seats for this specific bus and date
+  if (date) {
+    var bookedLocally = getBookedSeatsForBus(bus.id, date);
+    bookedLocally.forEach(function (s) {
+      var sn = parseInt(s);
+      if (!isNaN(sn) && unavailable.indexOf(sn) === -1) {
+        unavailable.push(sn);
+      }
+    });
+  }
 
   mapEl.innerHTML =
     '<div class="bus-seat-legend">' +
@@ -651,8 +729,37 @@ function initBookingForm(bus, date, passengers) {
     // Also save in user account in localStorage
     saveBookingToAccount(bookingData);
 
-    // Redirect to confirmation page
-    window.location.href = "/confirmation.html";
+    // Save to global confirmed bookings list
+    try {
+      var all = JSON.parse(localStorage.getItem("busroute_all_bookings") || "[]");
+      all.push(bookingData);
+      localStorage.setItem("busroute_all_bookings", JSON.stringify(all));
+    } catch (e) {}
+
+    // Update hidden form inputs
+    var hiddenSeats = document.getElementById("selected-seats-input");
+    if (hiddenSeats) hiddenSeats.value = selectedSeats.join(",");
+    var hiddenDate = document.getElementById("travel-date-input");
+    if (hiddenDate) hiddenDate.value = date;
+
+    // Send POST to Django backend to save to SQLite database
+    var formEl = document.getElementById("booking-form");
+    if (formEl) {
+      var formData = new FormData(formEl);
+      formData.set("selected_seats", selectedSeats.join(","));
+      formData.set("travel_date", date);
+
+      fetch(window.location.href, {
+        method: "POST",
+        body: formData
+      }).catch(function (err) {
+        console.log("Database booking sync notice:", err);
+      }).finally(function () {
+        window.location.href = "/confirmation.html";
+      });
+    } else {
+      window.location.href = "/confirmation.html";
+    }
   });
 }
 

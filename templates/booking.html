@@ -80,7 +80,7 @@
           <div class="booking-panel">
             <h2 class="booking-panel-title">Selected Bus</h2>
             <div id="bus-summary-card" aria-live="polite">
-              <!-- Rendered by renderBusSummaryCard() in app.js?v=5 -->
+              <!-- Rendered by renderBusSummaryCard() in app.js?v=6 -->
               <p style="color:var(--color-muted); font-size:var(--font-size-sm);">Loading bus details…</p>
             </div>
           </div>
@@ -92,7 +92,7 @@
               
             </h2>
 
-            <!-- Seat map rendered by renderSeatMap() in app.js?v=5 -->
+            <!-- Seat map rendered by renderSeatMap() in app.js?v=6 -->
             <div id="seat-map" aria-label="Sample seat map" role="region">
               <p style="color:var(--color-muted); font-size:var(--font-size-sm);">Loading seat map…</p>
             </div>
@@ -122,6 +122,7 @@
 
               <!-- Hidden booking fields -->
               <input type="hidden" id="selected-seats-input" name="selected_seats" value="" />
+              <input type="hidden" id="travel-date-input" name="travel_date" value="{{ travel_date }}" />
 
               <div class="passenger-form-grid">
                 <!-- Full Name -->
@@ -261,6 +262,6 @@
   <script src="/assets/js/data.js"></script>
   <script src="/assets/js/auth.js"></script>
   <script id="django-bus-data" type="application/json">{{ bus_json|safe }}</script>
-  <script src="/assets/js/app.js?v=5"></script>
+  <script src="/assets/js/app.js?v=6"></script>
 </body>
 </html>
