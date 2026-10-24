@@ -400,8 +400,9 @@ function renderBusSummary(bus, date, passengers) {
 
 
 // Find all already booked seats for a bus on a specific date (from localStorage)
-function getBookedSeatsForBus(busId, travelDate) {
+function getBookedSeatsForBus(busId, travelDate, operatorName) {
   var booked = [];
+  var opLower = (operatorName || "").toLowerCase().trim();
 
   // Check all user accounts in localStorage
   if (typeof getUsers === "function") {
@@ -409,7 +410,7 @@ function getBookedSeatsForBus(busId, travelDate) {
     users.forEach(function (u) {
       if (u.bookings && Array.isArray(u.bookings)) {
         u.bookings.forEach(function (b) {
-          var matchBus = (b.busId === busId) || (b.operator && b.operator.toLowerCase() === (busId || "").toLowerCase());
+          var matchBus = (b.busId === busId) || (opLower && b.operator && b.operator.toLowerCase().trim() === opLower);
           var matchDate = (b.date === travelDate) || (b.travelDate === travelDate);
           if (matchBus && matchDate) {
             if (Array.isArray(b.selectedSeats)) {
@@ -433,7 +434,7 @@ function getBookedSeatsForBus(busId, travelDate) {
   try {
     var all = JSON.parse(localStorage.getItem("busroute_all_bookings") || "[]");
     all.forEach(function (b) {
-      var matchBus = (b.busId === busId) || (b.operator && b.operator.toLowerCase() === (busId || "").toLowerCase());
+      var matchBus = (b.busId === busId) || (opLower && b.operator && b.operator.toLowerCase().trim() === opLower);
       var matchDate = (b.date === travelDate) || (b.travelDate === travelDate);
       if (matchBus && matchDate) {
         if (Array.isArray(b.selectedSeats)) {
@@ -475,7 +476,7 @@ function renderSeatMap(bus, maxPassengers, date) {
 
   // 2. Add local storage booked seats for this specific bus and date
   if (date) {
-    var bookedLocally = getBookedSeatsForBus(bus.id, date);
+    var bookedLocally = getBookedSeatsForBus(bus.id, date, bus.operator);
     bookedLocally.forEach(function (s) {
       var sn = parseInt(s);
       if (!isNaN(sn) && unavailable.indexOf(sn) === -1) {
