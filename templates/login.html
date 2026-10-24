@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="BusRoute — Log in to your account to view your bookings and manage your journeys." />
+  <title>Login — BusRoute</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/css/style.css?v=5" />
+  <!-- If already logged in, redirect to home -->
+  <script>
+    if (localStorage.getItem("busroute_current")) {
+      window.location.replace("/");
+    }
+  </script>
+</head>
+<body data-page="login">
+
+  <!-- NAVIGATION -->
+  <header>
+    <nav class="nav" aria-label="Main navigation">
+      <div class="nav-inner">
+        <a href="/" class="nav-logo" aria-label="BusRoute — Home">
+          <div class="nav-logo-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <rect x="1" y="3" width="22" height="13" rx="2"/>
+              <path d="M5 16v3M19 16v3M1 10h22"/>
+              <circle cx="7" cy="19" r="1" fill="currentColor"/>
+              <circle cx="17" cy="19" r="1" fill="currentColor"/>
+            </svg>
+          </div>
+          BusRoute
+        </a>
+        <ul class="nav-links" role="list">
+          <li><a href="/">Home</a></li>
+          <li><a href="/buses/">Search Buses</a></li>
+          <li id="auth-nav-placeholder"></li>
+        </ul>
+        <button id="hamburger-btn" class="hamburger" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobile-menu">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </nav>
+    <div id="mobile-overlay" class="mobile-overlay" aria-hidden="true"></div>
+    <nav id="mobile-menu" class="mobile-menu" aria-label="Mobile navigation">
+      <a href="/">Home</a>
+      <a href="/buses/">Search Buses</a>
+      <div id="mobile-auth-nav"></div>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <div class="auth-page">
+      <div class="auth-card">
+
+        <!-- Logo -->
+        <div class="auth-card-logo">
+          <a href="/" class="nav-logo" aria-label="BusRoute home">
+            <div class="nav-logo-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                <rect x="1" y="3" width="22" height="13" rx="2"/>
+                <path d="M5 16v3M19 16v3M1 10h22"/>
+              </svg>
+            </div>
+            BusRoute
+          </a>
+        </div>
+
+        <h1 class="auth-card-title">Welcome Back</h1>
+        <p class="auth-card-subtitle">Log in to see your booking history and manage your journeys.</p>
+
+        <!-- Error / success message area -->
+        <div id="login-alert" role="alert" aria-live="assertive" hidden></div>
+
+        <!-- Login Form -->
+        <form id="login-form" class="auth-form" method="POST" novalidate aria-label="Login form">
+          {% csrf_token %}
+          <!-- Email -->
+          <div class="form-group">
+            <label class="form-label" for="login-email">
+              Email Address <span class="required" aria-hidden="true">*</span>
+            </label>
+            <input
+              type="email"
+              id="login-email"
+              name="email"
+              class="form-input"
+              placeholder="your@email.com"
+              required
+              aria-required="true"
+              autocomplete="email"
+            />
+          </div>
+
+          <!-- Password -->
+          <div class="form-group">
+            <label class="form-label" for="login-password">
+              Password <span class="required" aria-hidden="true">*</span>
+            </label>
+            <div class="password-wrapper">
+              <input
+                type="password"
+                id="login-password"
+                name="password"
+                class="form-input"
+                placeholder="Enter your password"
+                required
+                aria-required="true"
+                autocomplete="current-password"
+              />
+              <button type="button" class="password-toggle" id="login-pw-toggle"
+                      aria-label="Show password" aria-controls="login-password">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" id="pw-eye-icon">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <button type="submit" id="login-submit-btn" class="btn btn-primary btn-lg btn-full">
+            Log In to My Account
+          </button>
+        </form>
+
+        <!-- Footer link -->
+        <div class="auth-form-footer">
+          Don't have an account?
+          <a href="/register/" id="go-to-register">Create one free</a>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Minimal footer -->
+  <footer style="background:var(--color-primary-dark); color:rgba(255,255,255,0.4); text-align:center; padding:1rem; font-size:0.75rem;">
+    © 2026 BusRoute Inc. &nbsp;|&nbsp; Safe and convenient travel.
+  </footer>
+
+  <script src="/assets/js/data.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/app.js?v=5"></script>
+</body>
+</html>

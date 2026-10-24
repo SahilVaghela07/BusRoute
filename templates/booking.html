@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="BusRoute — Select your seats and enter passenger details to complete your bus reservation." />
+  <title>Book Your Seats — BusRoute</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/css/style.css?v=5" />
+  <!-- Check login status -->
+  <script>
+    if (!localStorage.getItem("busroute_current")) {
+      window.location.replace("/login.html");
+    }
+  </script>
+</head>
+<body data-page="booking">
+
+  <!-- NAVIGATION -->
+  <header>
+    <nav class="nav" aria-label="Main navigation">
+      <div class="nav-inner">
+        <a href="/" class="nav-logo" aria-label="BusRoute — Home">
+          <div class="nav-logo-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <rect x="1" y="3" width="22" height="13" rx="2"/>
+              <path d="M5 16v3M19 16v3M1 10h22"/>
+              <circle cx="7" cy="19" r="1" fill="currentColor"/>
+              <circle cx="17" cy="19" r="1" fill="currentColor"/>
+            </svg>
+          </div>
+          BusRoute
+        </a>
+        <ul class="nav-links" role="list">
+          <li><a href="/">Home</a></li>
+          <li><a href="/buses/">Search Buses</a></li>
+          <li id="auth-nav-placeholder"></li>
+        </ul>
+        <button id="hamburger-btn" class="hamburger" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobile-menu">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </nav>
+    <div id="mobile-overlay" class="mobile-overlay" aria-hidden="true"></div>
+    <nav id="mobile-menu" class="mobile-menu" aria-label="Mobile navigation">
+      <a href="/">Home</a>
+      <a href="/buses/">Search Buses</a>
+      <div id="mobile-auth-nav"></div>
+    </nav>
+  </header>
+
+  <main id="main-content">
+
+    <!-- Page Header -->
+    <section class="booking-page-header" aria-labelledby="booking-heading">
+      <div class="container">
+        <a href="javascript:history.back()" class="back-link">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+            <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+          </svg>
+          Back to Results
+        </a>
+        <h1 id="booking-heading">Book Your Seats</h1>
+        <p class="page-intro">Select your seats and fill in your passenger details.</p>
+      </div>
+    </section>
+
+    <!-- Booking Layout -->
+    <div class="container" id="booking-main">
+      <div class="booking-layout">
+
+        <!-- LEFT COLUMN: Bus summary, seat map, passenger form -->
+        <div>
+
+          <!-- Bus Summary Card (populated by JS) -->
+          <div class="booking-panel">
+            <h2 class="booking-panel-title">Selected Bus</h2>
+            <div id="bus-summary-card" aria-live="polite">
+              <!-- Rendered by renderBusSummaryCard() in app.js?v=5 -->
+              <p style="color:var(--color-muted); font-size:var(--font-size-sm);">Loading bus details…</p>
+            </div>
+          </div>
+
+          <!-- Seat Selection -->
+          <div class="booking-panel">
+            <h2 class="booking-panel-title">
+              Select Your Seat(s)
+              
+            </h2>
+
+            <!-- Seat map rendered by renderSeatMap() in app.js?v=5 -->
+            <div id="seat-map" aria-label="Sample seat map" role="region">
+              <p style="color:var(--color-muted); font-size:var(--font-size-sm);">Loading seat map…</p>
+            </div>
+
+            <!-- Seat selection message (errors / limits) -->
+            <div
+              id="seat-message"
+              class="seat-message"
+              role="alert"
+              aria-live="assertive"
+              hidden
+            ></div>
+          </div>
+
+          <!-- Passenger Details Form -->
+          <div class="booking-panel">
+            <h2 class="booking-panel-title">Passenger Details</h2>
+
+            <form
+              id="booking-form"
+              method="POST"
+              action=""
+              novalidate
+              aria-label="Passenger booking form"
+            >
+              {% csrf_token %}
+
+              <!-- Hidden booking fields -->
+              <input type="hidden" id="selected-seats-input" name="selected_seats" value="" />
+
+              <div class="passenger-form-grid">
+                <!-- Full Name -->
+                <div class="form-group" style="grid-column: 1 / -1;">
+                  <label class="form-label" for="passenger-name">
+                    Full Name <span class="required" aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="passenger-name"
+                    name="passenger_name"
+                    class="form-input"
+                    placeholder="e.g. Raj Patel"
+                    required
+                    aria-required="true"
+                    autocomplete="name"
+                    minlength="2"
+                  />
+                </div>
+
+                <!-- Email -->
+                <div class="form-group">
+                  <label class="form-label" for="passenger-email">
+                    Email Address <span class="required" aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    id="passenger-email"
+                    name="passenger_email"
+                    class="form-input"
+                    placeholder="e.g. raj@email.com"
+                    required
+                    aria-required="true"
+                    autocomplete="email"
+                  />
+                </div>
+
+                <!-- Phone -->
+                <div class="form-group">
+                  <label class="form-label" for="passenger-phone">
+                    Mobile Number <span class="required" aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    id="passenger-phone"
+                    name="passenger_phone"
+                    class="form-input"
+                    placeholder="e.g. 9876543210"
+                    required
+                    aria-required="true"
+                    autocomplete="tel"
+                    pattern="[6-9][0-9]{9}"
+                    maxlength="10"
+                  />
+                </div>
+              </div>
+
+              <!-- Submit button -->
+              <div style="margin-top: 1.5rem;">
+                <button
+                  type="submit"
+                  id="submit-booking-btn"
+                  class="btn btn-primary btn-lg btn-full"
+                >
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                  </svg>
+                  Confirm Booking
+                </button>
+                </div>
+            </form>
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: Fare Summary -->
+        <aside class="fare-summary-panel" aria-label="Fare summary">
+          <div class="fare-summary-title">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--color-accent)" stroke-width="2" stroke-linecap="round" style="display:inline-block; vertical-align:middle; margin-right:6px;" aria-hidden="true">
+              <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            Fare Summary
+          </div>
+
+          <!-- Fare display — updated dynamically as seats are selected -->
+          <div id="fare-display" class="fare-display" aria-live="polite" aria-label="Current fare total">
+            Select seats to calculate fare
+          </div>
+
+          <div style="font-size:var(--font-size-xs); color:var(--color-muted); line-height:1.6; margin-bottom:1.5rem;">
+            The total fare updates in real time as you select or deselect seats. All taxes and booking fees are included.
+          </div>
+
+          <hr style="border:none; border-top:1px solid var(--color-border); margin-bottom:1rem;" />
+
+          </aside>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer" aria-label="Site footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="nav-logo">
+            <div class="nav-logo-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                <rect x="1" y="3" width="22" height="13" rx="2"/>
+                <path d="M5 16v3M19 16v3M1 10h22"/>
+              </svg>
+            </div>
+            BusRoute
+          </a>
+          <p>Online Bus Ticket Reservation Platform</p>
+        </div>
+        <div>
+          <div class="footer-col-title">Navigation</div>
+          <ul class="footer-links" role="list">
+            <li><a href="/">Home</a></li>
+            <li><a href="/buses/">Search Buses</a></li>
+            </ul>
+        </div>
+        <div></div>
+        <div></div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 BusRoute Inc.</span>
+        <span></span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/assets/js/data.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script id="django-bus-data" type="application/json">{{ bus_json|safe }}</script>
+  <script src="/assets/js/app.js?v=5"></script>
+</body>
+</html>

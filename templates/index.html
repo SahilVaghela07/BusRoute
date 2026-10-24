@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="BusRoute — Find buses, compare schedules, and book your journey across Gujarat with ease." />
+  <title>BusRoute — Your Journey Starts Here</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/css/style.css?v=5" />
+  <!-- Check login status -->
+  <script>
+    if (!localStorage.getItem("busroute_current")) {
+      window.location.replace("/login.html");
+    }
+  </script>
+</head>
+<body data-page="home">
+
+  <!-- Navigation Bar -->
+  <header>
+    <nav class="nav" aria-label="Main navigation">
+      <div class="nav-inner">
+
+        <!-- BusRoute Wordmark -->
+        <a href="/" class="nav-logo" aria-label="BusRoute — Home">
+          <div class="nav-logo-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <rect x="1" y="3" width="22" height="13" rx="2"/>
+              <path d="M5 16v3M19 16v3M1 10h22"/>
+              <circle cx="7" cy="19" r="1" fill="currentColor"/>
+              <circle cx="17" cy="19" r="1" fill="currentColor"/>
+            </svg>
+          </div>
+          BusRoute
+        </a>
+
+        <!-- Desktop Nav Links -->
+        <ul class="nav-links" role="list">
+          <li><a href="/" class="active" aria-current="page">Home</a></li>
+          <li><a href="/buses/">Search Buses</a></li>
+          <li id="auth-nav-placeholder"></li>
+        </ul>
+
+        <!-- Hamburger (mobile) -->
+        <button
+          id="hamburger-btn"
+          class="hamburger"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
+          aria-controls="mobile-menu"
+        >
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Mobile menu overlay -->
+    <div id="mobile-overlay" class="mobile-overlay" aria-hidden="true"></div>
+
+    <!-- Mobile nav menu -->
+    <nav id="mobile-menu" class="mobile-menu" aria-label="Mobile navigation">
+      <a href="/" aria-current="page">Home</a>
+      <a href="/buses/">Search Buses</a>
+      <div id="mobile-auth-nav"></div>
+    </nav>
+  </header>
+
+  <main id="main-content">
+
+    <!-- Hero Section and Search Form -->
+    <section class="hero" aria-labelledby="hero-heading">
+      <div class="hero-content">
+
+        <h1 id="hero-heading">Your Journey<br/>Starts Here</h1>
+        <p class="hero-subtitle">
+          Find your route, compare bus schedules, and plan your next journey with BusRoute.
+          Fast, simple, and easy to use.
+        </p>
+
+        <!-- Search Card -->
+        <div class="search-card">
+          <div class="search-card-title">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--color-accent)" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            Search for Buses
+          </div>
+
+          <form
+            id="hero-search-form"
+            method="GET"
+            action="{% url 'buses' %}"
+            novalidate
+            aria-label="Bus search form"
+          >
+            <!-- From / Swap / To Row -->
+            <div class="search-form-row">
+              <div class="form-group">
+                <label class="form-label" for="search-from">
+                  From <span class="required" aria-hidden="true">*</span>
+                </label>
+                <select
+                  id="search-from"
+                  name="from"
+                  class="form-select"
+                  required
+                  aria-required="true"
+                >
+                  <option value="">Select departure city</option>
+                </select>
+              </div>
+
+              <!-- Swap button -->
+              <button
+                type="button"
+                id="swap-btn"
+                class="swap-btn"
+                aria-label="Swap departure and destination cities"
+                title="Swap cities"
+              >
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                  <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/>
+                </svg>
+              </button>
+
+              <div class="form-group">
+                <label class="form-label" for="search-to">
+                  To <span class="required" aria-hidden="true">*</span>
+                </label>
+                <select
+                  id="search-to"
+                  name="to"
+                  class="form-select"
+                  required
+                  aria-required="true"
+                >
+                  <option value="">Select destination city</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Date / Passengers / Submit Row -->
+            <div class="search-form-bottom">
+              <div class="form-group">
+                <label class="form-label" for="search-date">
+                  Travel Date <span class="required" aria-hidden="true">*</span>
+                </label>
+                <input
+                  type="date"
+                  id="search-date"
+                  name="date"
+                  class="form-input"
+                  required
+                  aria-required="true"
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="search-passengers">
+                  Passengers <span class="required" aria-hidden="true">*</span>
+                </label>
+                <input
+                  type="number"
+                  id="search-passengers"
+                  name="passengers"
+                  class="form-input"
+                  value="1"
+                  min="1"
+                  max="10"
+                  required
+                  aria-required="true"
+                />
+              </div>
+
+              <div class="search-submit-wrap">
+                <button type="submit" class="btn btn-primary btn-lg btn-full" id="search-submit-btn">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                  Search Buses
+                </button>
+              </div>
+            </div>
+
+            
+            </form>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Popular Routes Section -->
+    <section class="section popular-routes" aria-labelledby="popular-heading">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title" id="popular-heading">Popular Routes</h2>
+          <p class="section-subtitle">Frequently travelled bus corridors across Gujarat. Click any route to see available buses.</p>
+        </div>
+        <!-- Populated dynamically by app.js?v=5 renderPopularRoutes() -->
+        <div id="popular-routes-grid" class="routes-grid" aria-live="polite">
+          <!-- Route cards inserted here by JavaScript -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section features" aria-labelledby="features-heading">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title" id="features-heading">Why Choose BusRoute?</h2>
+          <p class="section-subtitle">A clean and easy-to-use platform for planning your bus journey.</p>
+        </div>
+        <div class="features-grid">
+
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Easy Search</h3>
+            <p class="feature-desc">Find buses between cities with a simple search form. Filter by date and number of passengers.</p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <rect x="1" y="3" width="22" height="13" rx="2"/>
+                <path d="M5 16v3M19 16v3M1 10h22"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Compare Buses</h3>
+            <p class="feature-desc">View multiple operators, bus types, fares, and timings side by side and pick the best option.</p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <path d="M3 9h18M9 21V9"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Choose Your Seat</h3>
+            <p class="feature-desc">Pick from an interactive seat map and see exactly where you'll be sitting on the bus.</p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Secure Booking</h3>
+            <p class="feature-desc">Your personal and reservation details are transmitted securely for a seamless booking experience.</p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Live Fare Calculation</h3>
+            <p class="feature-desc">Fare totals update in real time as you select seats, so there are no surprises at checkout.</p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Instant Confirmation</h3>
+            <p class="feature-desc">Receive a booking summary immediately after submitting your reservation form.</p>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="section how-it-works" aria-labelledby="how-heading">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title" id="how-heading">Simple 4-Step Booking</h2>
+          <p class="section-subtitle">From search to confirmation in minutes.</p>
+        </div>
+        <div class="steps-row" role="list">
+          <div class="step" role="listitem">
+            <div class="step-number" aria-hidden="true">1</div>
+            <div class="step-title">Search</div>
+            <p class="step-desc">Enter your origin, destination, travel date, and number of passengers.</p>
+          </div>
+          <div class="step" role="listitem">
+            <div class="step-number" aria-hidden="true">2</div>
+            <div class="step-title">Choose a Bus</div>
+            <p class="step-desc">Browse results, compare times and fares, and select the bus that suits you.</p>
+          </div>
+          <div class="step" role="listitem">
+            <div class="step-number" aria-hidden="true">3</div>
+            <div class="step-title">Pick Seats</div>
+            <p class="step-desc">Select your preferred seats from the interactive seat map and enter passenger details.</p>
+          </div>
+          <div class="step" role="listitem">
+            <div class="step-number" aria-hidden="true">4</div>
+            <div class="step-title">Confirm</div>
+            <p class="step-desc">Confirm your reservation and instantly receive your booking reference number.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    </main>
+
+  <!-- Footer -->
+  <footer class="footer" aria-label="Site footer">
+    <div class="container">
+      <div class="footer-grid">
+
+        <div class="footer-brand">
+          <a href="/" class="nav-logo" aria-label="BusRoute Home">
+            <div class="nav-logo-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                <rect x="1" y="3" width="22" height="13" rx="2"/>
+                <path d="M5 16v3M19 16v3M1 10h22"/>
+                <circle cx="7" cy="19" r="1" fill="currentColor"/>
+                <circle cx="17" cy="19" r="1" fill="currentColor"/>
+              </svg>
+            </div>
+            BusRoute
+          </a>
+          <p>Your trusted platform for booking intercity bus tickets.</p>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Navigation</div>
+          <ul class="footer-links" role="list">
+            <li><a href="/">Home</a></li>
+            <li><a href="/buses/">Search Buses</a></li>
+            </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Popular Routes</div>
+          <ul class="footer-links" role="list">
+            <li><a href="/buses/?from=Ahmedabad&to=Surat&date=2026-11-10&passengers=1">Ahmedabad → Surat</a></li>
+            <li><a href="/buses/?from=Anand&to=Ahmedabad&date=2026-11-10&passengers=1">Anand → Ahmedabad</a></li>
+            <li><a href="/buses/?from=Ahmedabad&to=Rajkot&date=2026-11-10&passengers=1">Ahmedabad → Rajkot</a></li>
+            <li><a href="/buses/?from=Surat&to=Ahmedabad&date=2026-11-10&passengers=1">Surat → Ahmedabad</a></li>
+          </ul>
+        </div>
+
+        </div>
+
+      <div class="footer-bottom">
+        <span>© 2026 BusRoute Inc.</span>
+        <span>All rights reserved.</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts — data.js must load before app.js?v=5 -->
+  <script src="/assets/js/data.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/app.js?v=5"></script>
+</body>
+</html>

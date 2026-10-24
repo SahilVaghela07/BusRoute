@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="BusRoute — Browse available buses for your route. Compare schedules, fares, and seat availability." />
+  <title>Bus Search Results — BusRoute</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/css/style.css?v=5" />
+  <!-- Check login status -->
+  <script>
+    if (!localStorage.getItem("busroute_current")) {
+      window.location.replace("/login.html");
+    }
+  </script>
+</head>
+<body data-page="buses">
+
+  <!-- NAVIGATION -->
+  <header>
+    <nav class="nav" aria-label="Main navigation">
+      <div class="nav-inner">
+        <a href="/" class="nav-logo" aria-label="BusRoute — Home">
+          <div class="nav-logo-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <rect x="1" y="3" width="22" height="13" rx="2"/>
+              <path d="M5 16v3M19 16v3M1 10h22"/>
+              <circle cx="7" cy="19" r="1" fill="currentColor"/>
+              <circle cx="17" cy="19" r="1" fill="currentColor"/>
+            </svg>
+          </div>
+          BusRoute
+        </a>
+        <ul class="nav-links" role="list">
+          <li><a href="/">Home</a></li>
+          <li><a href="/buses/" class="active" aria-current="page">Search Buses</a></li>
+          <li id="auth-nav-placeholder"></li>
+        </ul>
+        <button id="hamburger-btn" class="hamburger" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobile-menu">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </nav>
+    <div id="mobile-overlay" class="mobile-overlay" aria-hidden="true"></div>
+    <nav id="mobile-menu" class="mobile-menu" aria-label="Mobile navigation">
+      <a href="/">Home</a>
+      <a href="/buses/" aria-current="page">Search Buses</a>
+      <div id="mobile-auth-nav"></div>
+    </nav>
+  </header>
+
+  <main id="main-content">
+
+    <!-- Page Header -->
+    <section class="buses-page-header" aria-labelledby="results-heading">
+      <div class="container">
+
+        <a href="/" class="back-link" aria-label="Back to home page">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+            <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+          </svg>
+          Back to Search
+        </a>
+
+        <h1 id="results-heading">Available Buses</h1>
+
+        <!-- Search summary — populated by JavaScript from URL query params -->
+        <div id="search-summary" class="search-summary-bar" aria-live="polite" aria-label="Search summary">
+          <!-- e.g. "Ahmedabad → Surat | Monday, 10 November 2026 | 2 passengers" -->
+        </div>
+
+        </div>
+    </section>
+
+    <!-- Results Area -->
+    <section class="buses-content" aria-labelledby="results-heading">
+      <div class="container">
+        <div class="buses-layout">
+
+          <!-- Sidebar -->
+          <aside class="filter-sidebar" aria-label="Sort and filter options">
+            <h3>Filter &amp; Sort</h3>
+            <p style="font-size:var(--font-size-sm); color:var(--color-muted); margin-bottom:1rem; line-height:1.6;">
+              Use the sort options on the right to reorder results by price, time or rating.
+            </p>
+            <hr style="border:none; border-top:1px solid var(--color-border); margin-bottom:1rem;" />
+            <div style="font-size:var(--font-size-xs); color:var(--color-muted); line-height:1.5;">
+              Select a bus to proceed to seat selection and reservation.
+            </div>
+          </aside>
+
+          <!-- Main Results -->
+          <div>
+            <!-- Toolbar: count + sort -->
+            <div class="results-toolbar">
+              <div id="results-count" class="results-count" aria-live="polite" aria-label="Results count">
+                Searching…
+              </div>
+              <div class="sort-bar">
+                <label class="sort-label" for="sort-select">Sort by:</label>
+                <select id="sort-select" class="form-select" style="width:auto;" aria-label="Sort bus results">
+                  <option value="departure-asc">Departure (Earliest)</option>
+                  <option value="departure-desc">Departure (Latest)</option>
+                  <option value="fare-asc">Fare (Lowest)</option>
+                  <option value="fare-desc">Fare (Highest)</option>
+                  <option value="rating-desc">Rating (Best)</option>
+                  <option value="duration-asc">Duration (Shortest)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Bus result cards — populated by JavaScript -->
+            <div
+              id="buses-list"
+              aria-live="polite"
+              aria-label="Bus search results"
+            >
+              <!-- Cards rendered by renderBusList() in app.js?v=5 -->
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer" aria-label="Site footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="nav-logo" aria-label="BusRoute Home">
+            <div class="nav-logo-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                <rect x="1" y="3" width="22" height="13" rx="2"/>
+                <path d="M5 16v3M19 16v3M1 10h22"/>
+              </svg>
+            </div>
+            BusRoute
+          </a>
+          <p>Online Bus Ticket Reservation Platform</p>
+        </div>
+        <div>
+          <div class="footer-col-title">Navigation</div>
+          <ul class="footer-links" role="list">
+            <li><a href="/">Home</a></li>
+            <li><a href="/buses/">Search Buses</a></li>
+            </ul>
+        </div>
+        <div>
+          <div class="footer-col-title">Sample Routes</div>
+          <ul class="footer-links" role="list">
+            <li><a href="/buses/?from=Ahmedabad&to=Surat&date=2026-11-10&passengers=1">Ahmedabad → Surat</a></li>
+            <li><a href="/buses/?from=Anand&to=Ahmedabad&date=2026-11-10&passengers=1">Anand → Ahmedabad</a></li>
+            <li><a href="/buses/?from=Surat&to=Ahmedabad&date=2026-11-10&passengers=1">Surat → Ahmedabad</a></li>
+          </ul>
+        </div>
+        </div>
+      <div class="footer-bottom">
+        <span>© 2026 BusRoute Inc.</span>
+        <span>All rights reserved.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/assets/js/data.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script id="django-buses-data" type="application/json">{{ buses_json|safe }}</script>
+  <script src="/assets/js/app.js?v=5"></script>
+</body>
+</html>
