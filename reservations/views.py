@@ -18,6 +18,24 @@ def buses_view(request):
 
     if from_city and to_city:
         bus_list = Bus.objects.filter(from_city__iexact=from_city, to_city__iexact=to_city)
+        if not bus_list.exists() and from_city.lower() != to_city.lower():
+            # Guarantee at least one daily bus for any selected city pair
+            bus_code = f"BUS{random.randint(600, 999)}"
+            while Bus.objects.filter(bus_number=bus_code).exists():
+                bus_code = f"BUS{random.randint(600, 999)}"
+            Bus.objects.create(
+                bus_number=bus_code,
+                operator="GSRTC Intercity Express",
+                bus_type="Express Non-AC",
+                from_city=from_city,
+                to_city=to_city,
+                departure_time="07:00:00",
+                arrival_time="11:30:00",
+                duration="4h 30m",
+                fare=240,
+                total_seats=45
+            )
+            bus_list = Bus.objects.filter(from_city__iexact=from_city, to_city__iexact=to_city)
     else:
         bus_list = Bus.objects.all()
 
