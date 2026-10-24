@@ -841,12 +841,29 @@ function initLoginPage() {
         return;
       }
 
-      var res = loginUser(email, password);
-      if (res.success) {
-        window.location.href = "/";
-      } else {
-        showAlert(alertEl, res.error);
-      }
+      var formData = new FormData(form);
+      fetch("/login/", {
+        method: "POST",
+        body: formData,
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      })
+      .then(function (response) { return response.json(); })
+      .then(function (data) {
+        if (data.success) {
+          loginUser(email, password);
+          window.location.href = "/";
+        } else {
+          showAlert(alertEl, data.error || "Invalid email or password.");
+        }
+      })
+      .catch(function () {
+        var res = loginUser(email, password);
+        if (res.success) {
+          window.location.href = "/";
+        } else {
+          showAlert(alertEl, res.error);
+        }
+      });
     });
   }
 }
@@ -929,12 +946,29 @@ function initRegisterPage() {
         return;
       }
 
-      var res = registerUser(name, email, phone, password);
-      if (res.success) {
-        window.location.href = "/";
-      } else {
-        showAlert(alertEl, res.error);
-      }
+      var formData = new FormData(form);
+      fetch("/register/", {
+        method: "POST",
+        body: formData,
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      })
+      .then(function (response) { return response.json(); })
+      .then(function (data) {
+        if (data.success) {
+          registerUser(name, email, phone, password);
+          window.location.href = "/";
+        } else {
+          showAlert(alertEl, data.error || "Registration failed.");
+        }
+      })
+      .catch(function () {
+        var res = registerUser(name, email, phone, password);
+        if (res.success) {
+          window.location.href = "/";
+        } else {
+          showAlert(alertEl, res.error);
+        }
+      });
     });
   }
 }
@@ -957,7 +991,18 @@ function initMyBookingsPage() {
   var listEl = document.getElementById("bookings-list");
   if (!listEl) return;
 
-  var bookings = user.bookings || [];
+  var dbBookings = [];
+  var djangoBookingsEl = document.getElementById("django-bookings-data");
+  if (djangoBookingsEl && djangoBookingsEl.textContent.trim()) {
+    try {
+      var parsed = JSON.parse(djangoBookingsEl.textContent);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        dbBookings = parsed;
+      }
+    } catch (e) {}
+  }
+
+  var bookings = (dbBookings.length > 0) ? dbBookings : (user.bookings || []);
 
   if (bookings.length === 0) {
     listEl.innerHTML =
